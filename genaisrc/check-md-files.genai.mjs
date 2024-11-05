@@ -1,20 +1,30 @@
 script({
+  model: 'github:o1-preview',
   title: 'Spell checker',
   system: ['system', 'system.files', 'system.changelog'],
   temperature: 0.2,
 });
 
+const pathsToCheck = ['*.md', '*.mdx', '**/*.md', '**/*.mdx'];
+
 // Get files from environment or modified files from Git if none provided
-let files = env.files;
-if (files.length === 0) {
-  files = await git.listFiles('staged', {
-    paths: ['*.md', '*.mdx'],
+let files = await git.listFiles('staged', {
+  paths: pathsToCheck,
+});
+
+if (!files.length) {
+  files = await git.listFiles('modified-base', {
+    paths: pathsToCheck,
   });
-  if (!files.length)
-    files = await git.listFiles('modified-base', {
-      paths: ['*.md', '*.mdx'],
-    });
 }
+
+if (files.length === 0) {
+  console.log('No files found to check');
+  process.exit(0);
+}
+
+console.log('Checking files:', files);
+
 def('FILES', files, { endsWith: ['.md', '.mdx'] });
 
 $`Let's take a deep breadth and analyze the spelling and grammar of the content of FILES.
@@ -31,4 +41,19 @@ If you do not find any mistakes, do not change the content.
 - in .mdx files, do NOT fix inline typescript code
 `;
 
-defFileOutput(files, 'fixed markdown or mdx files');
+defOutputProcessor(async (output) => {
+  const { fileEdits } = output;
+
+  const filesChanged = Object.keys(fileEdits).;
+
+  for (const fileName in fileEdits) {
+    const edits = fileEdits[fileName];
+
+    const { before, after } = edits;
+
+    if (before !== after) {
+      console.log(output.text);
+      process.exit(1);
+    }
+  }
+});

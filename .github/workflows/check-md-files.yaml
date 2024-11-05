@@ -1,0 +1,19 @@
+name: Check Markdown Files
+on:
+  pull_request
+
+jobs:
+  vale-pr-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Run AI to improve md files
+        run: |
+          npx genaiscript run check-md-files
